@@ -10,7 +10,7 @@ using namespace std;
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
 enum Camera_Movement
 {
-	FORWARD, BACKWARD, LEFT, RIGHT
+	FORWARD, BACKWARD, LEFT, RIGHT, ROTATERIGHT, ROTATELEFT, ROTATEUP, ROTATEDOWN
 };
 
 // Default camera values
@@ -115,15 +115,15 @@ class Camera
 
 		bool noOutOfCheck(glm::vec3 toVerify, float limitRow, float limitCol)
 		{
-			if (toVerify.x <= 5.5f)
+			if (toVerify.x <= 4.5f)
 				return false;
-			if (toVerify.y <= 5.5f)
+			if (toVerify.y <= 4.5f)
 				return false;
-			if (toVerify.z <= 5.5f)
+			if (toVerify.z <= 4.5f)
 				return false;
-			if (toVerify.x >= limitRow - 5.0f)
+			if (toVerify.x >= limitRow - 4.0f)
 				return false;
-			if (toVerify.z >= limitCol - 5.0f)
+			if (toVerify.z >= limitCol - 4.0f)
 				return false;
 			if (toVerify.y >= 75.0f)
 				return false;
@@ -145,6 +145,26 @@ class Camera
 			if (direction == RIGHT)
 				if (noOutOfCheck((Position + Right * velocity), limitRow, limitCol))
 					Position += Right * velocity;
+			if (direction == ROTATERIGHT)
+			{
+				Yaw += velocity / 4;
+				updateCameraVectors();
+			}
+			if (direction == ROTATELEFT)
+			{
+				Yaw -= velocity / 4;
+				updateCameraVectors();
+			}
+			if (direction == ROTATEUP)
+			{
+				Pitch += velocity / 4;
+				updateCameraVectors();
+			}
+			if (direction == ROTATEDOWN)
+			{
+				Pitch -= velocity / 4;
+				updateCameraVectors();
+			}
 		}
 
 		// Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
@@ -168,7 +188,6 @@ class Camera
 			// Update Front, Right and Up Vectors using the updated Eular angles
 			updateCameraVectors();
 		}
-
 
 		void updateCameraVectors()
 		{

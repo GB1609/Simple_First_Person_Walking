@@ -9,12 +9,13 @@ out vec4 finalColor;
 uniform vec3 lightPos; 
 uniform vec3 viewPos;
 uniform sampler2D TEXTURE;
+uniform bool modelImport;
 
 void main()
 {
 	vec3 lightColor=vec3(1.0f,1.0f,1.0f);
 	vec3 colorTexture = texture(TEXTURE, TextCoords).rgb;
-    float constantAmbient = 0.3f;
+    float constantAmbient = 0.8f;
     vec3 ambient = constantAmbient * lightColor *colorTexture;//*colorTexture
   	
     // Diffuse 
@@ -30,6 +31,14 @@ void main()
    vec3 halfwayDir = normalize(lightDir + viewDir);  
    float spec = pow(max(dot(normale, halfwayDir), 0.0), 32); 
    vec3 specular = specularIntensity * spec * lightColor;
+     
+     //attenuation
+    float distance    = length(lightPos - FragPos);
+    float attenuation = 1.0 / (1.0 + 0.0039 * distance + 
+    		    0.00000032 * (distance * distance));    
+    ambient  *= attenuation; 
+    diffuse   *= attenuation;
+    specular *= attenuation; 
      
     vec3 result = (ambient + diffuse + specular);
    	

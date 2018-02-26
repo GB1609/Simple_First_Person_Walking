@@ -7,7 +7,7 @@ BUILD_DIR = build/$(BUILD)
 GLAD_DIR= build/GLAD
 BINARY = $(BUILD_DIR)/particlesExecutable
 GCC = g++
-LIBS = -lglfw3 -lGLEW -lGLU -lGL -lglut -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -lXcursor -lpthread -lrt -lm -ldl   
+LIBS = -lglfw3 -lGLEW -lGLU -lGL -lglut -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -lXcursor -lpthread -lrt -lm -ldl -lassimp   
 
 #######RACCOLTA FILE C E CPP###########
 SRCS = $(shell find $(SOURCE_DIR) -name '*.cpp')

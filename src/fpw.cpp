@@ -1,4 +1,5 @@
 #include "../lib/GLAD/glad.h"
+#include "../lib/model.h"
 #include <GLFW/glfw3.h>
 #include "../lib/shader.h"
 #include <iostream>
@@ -11,6 +12,9 @@
 #include <fstream>
 #include <regex.h>
 #include <string>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "../lib/stb_image.h"
 #include "camera.h"
@@ -28,10 +32,10 @@ const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
 
 // camera
-int nCols = 15, nRows = 15;
+int nCols = 14, nRows = 14;
 float cellSize = 100.0f;
-glm::vec3 cameraPos = glm::vec3(0.0f, 70.0f, 0.0f);
-glm::vec3 lightPos = glm::vec3((nRows / 2) * cellSize, 500.0f, (nCols / 2) * cellSize);
+glm::vec3 cameraPos = glm::vec3(8.0f, 60.0f, 8.0f);
+glm::vec3 lightPos = glm::vec3((nRows / 2) * cellSize, 30.0f, (nCols / 2) * cellSize);
 Camera cam(cameraPos);
 bool firstMouse = true;
 bool moved = false;
@@ -67,6 +71,7 @@ int main()
 	}
 
 	///////////////LOAD SHADER////////////////////////
+	Shader ourShader("src/model.vs", "src/model.fs");
 	Shader lightShader("src/lightShader.vs", "src/lightShader.fs");
 	////////////////////////////SHDAERS//////////////////////////////
 	SupportObjects support;
@@ -102,6 +107,11 @@ int main()
 
 	unsigned int textID = loadTexture("Data/floor.png");
 
+	//////MODELLO
+	Model guard("Data/nanosuit/nanosuit.obj");
+	Model cubeColored("Data/cubeColored/Cube.obj");
+	Model gameBlock("Data/Game_block/cub.obj");
+	Model rubik("Data/RubiksCube/Cube.obj");
 	////////////////////////////floor///////////////////////////////////////////////
 
 //	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -125,7 +135,7 @@ int main()
 		glm::mat4 projectionL = glm::perspective(glm::radians(cam.Zoom), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f,
 				10000.0f);
 		glm::mat4 viewL = cam.GetViewMatrix();
-
+		lightShader.setBool("modelImport", false);
 		lightShader.setVec3("lightPos", lightPos);
 		lightShader.setVec3("viewPos", cam.Position);
 		lightShader.setMat4("projection", projectionL);
@@ -136,6 +146,32 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, textID);
 		glDrawElements( GL_TRIANGLES, indexFloor.size(), GL_UNSIGNED_INT, 0);
 
+
+
+		// render the loaded model
+//		glm::mat4 model;
+		modelL = glm::translate(modelL, glm::vec3(300.0f, 5.75f, 300.0f));
+		modelL = glm::scale(modelL, glm::vec3(5.0f, 5.0f, 5.0f));
+		lightShader.setMat4("model", modelL);
+		lightShader.setBool("modelImport", true);
+		//		ourShader.setMat4("model", model);
+		guard.Draw(lightShader);
+		ourShader.use();
+		glm::mat4 projection = glm::perspective(glm::radians(cam.Zoom), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f,
+				10000.0f);
+		glm::mat4 view = cam.GetViewMatrix();
+		ourShader.setMat4("projection", projection);
+		ourShader.setMat4("view", view);
+		modelL = glm::translate(modelL, glm::vec3(50.0f, 5.75f, 50.0f));
+		modelL = glm::scale(modelL, glm::vec3(0.2f, 0.2f, 0.2f));
+		ourShader.setMat4("model", modelL);
+		lightShader.setBool("modelImport", true);
+		cubeColored.Draw(ourShader);
+
+//		glActiveTexture(GL_TEXTURE1);
+//		rock1.Draw(lightShader);
+//		dodge.Draw(ourShader);
+//		nissan.Draw(ourShader);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -150,7 +186,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 void processInput(GLFWwindow *window)
 {
-
 
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
@@ -184,6 +219,26 @@ void processInput(GLFWwindow *window)
 		cam.ProcessKeyboard(LEFT, deltaTime, nCols * cellSize, nRows * cellSize);
 		moved = true;
 	}
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		cam.ProcessKeyboard(ROTATELEFT, deltaTime, nCols * cellSize, nRows * cellSize);
+		moved = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		cam.ProcessKeyboard(ROTATERIGHT, deltaTime, nCols * cellSize, nRows * cellSize);
+		moved = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		cam.ProcessKeyboard(ROTATEUP, deltaTime, nCols * cellSize, nRows * cellSize);
+		moved = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		cam.ProcessKeyboard(ROTATEDOWN, deltaTime, nCols * cellSize, nRows * cellSize);
+		moved = true;
+	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
 		cam.ProcessKeyboard(RIGHT, deltaTime, nCols * cellSize, nRows * cellSize);
@@ -193,8 +248,8 @@ void processInput(GLFWwindow *window)
 }
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-//	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS)
-//	{
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS)
+	{
 
 		if (firstMouse || moved)
 		{
@@ -210,7 +265,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 		lastX = xpos;
 		lastY = ypos;
 		cam.ProcessMouseMovement(xoffset, yoffset);
-//	}
+	}
 }
 
 unsigned int loadTexture(const char * path)
