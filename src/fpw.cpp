@@ -19,7 +19,6 @@ using namespace std;
 using namespace glm;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 unsigned int loadTexture(const char * path);
 int stepProject = 0;
@@ -29,11 +28,10 @@ const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
 
 // camera
-//glm::vec3 cameraPos = glm::vec3(21.9f, 13.013f, 22.2f); //per test
-int nCols = 100, nRows = 100;
+int nCols = 15, nRows = 15;
 float cellSize = 100.0f;
 glm::vec3 cameraPos = glm::vec3(0.0f, 70.0f, 0.0f);
-glm::vec3 lightPos = glm::vec3((nRows / 2) * cellSize, 100.0f, (nCols / 2) * cellSize);
+glm::vec3 lightPos = glm::vec3((nRows / 2) * cellSize, 500.0f, (nCols / 2) * cellSize);
 Camera cam(cameraPos);
 bool firstMouse = true;
 bool moved = false;
@@ -61,7 +59,6 @@ int main()
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
-	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
 	{
@@ -129,6 +126,8 @@ int main()
 				10000.0f);
 		glm::mat4 viewL = cam.GetViewMatrix();
 
+		lightShader.setVec3("lightPos", lightPos);
+		lightShader.setVec3("viewPos", cam.Position);
 		lightShader.setMat4("projection", projectionL);
 		lightShader.setMat4("view", viewL);
 		lightShader.setMat4("model", modelL);
@@ -152,23 +151,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 void processInput(GLFWwindow *window)
 {
 
-	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
-	{
-		stepProject = 1;
-		Pressed = true;
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
-	{
-		stepProject = 2;
-		glBindTexture(GL_TEXTURE_2D, 0);
-		Pressed = true;
-	}
-	if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
-	{
-		stepProject = 3;
-		Pressed = true;
-	}
 
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
@@ -189,30 +171,30 @@ void processInput(GLFWwindow *window)
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		cam.ProcessKeyboard(FORWARD, deltaTime);
+		cam.ProcessKeyboard(FORWARD, deltaTime, nCols * cellSize, nRows * cellSize);
 		moved = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		cam.ProcessKeyboard(BACKWARD, deltaTime);
+		cam.ProcessKeyboard(BACKWARD, deltaTime, nCols * cellSize, nRows * cellSize);
 		moved = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		cam.ProcessKeyboard(LEFT, deltaTime);
+		cam.ProcessKeyboard(LEFT, deltaTime, nCols * cellSize, nRows * cellSize);
 		moved = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		cam.ProcessKeyboard(RIGHT, deltaTime);
+		cam.ProcessKeyboard(RIGHT, deltaTime, nCols * cellSize, nRows * cellSize);
 		moved = true;
 	}
 
 }
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS)
-	{
+//	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS)
+//	{
 
 		if (firstMouse || moved)
 		{
@@ -228,12 +210,9 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 		lastX = xpos;
 		lastY = ypos;
 		cam.ProcessMouseMovement(xoffset, yoffset);
-	}
+//	}
 }
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-	cam.ProcessMouseScroll(yoffset);
-}
+
 unsigned int loadTexture(const char * path)
 {
 	unsigned int textureID;

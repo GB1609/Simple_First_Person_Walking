@@ -4,7 +4,7 @@
 #include "../lib/GLAD/glad.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
+using namespace std;
 #include <vector>
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
@@ -16,7 +16,7 @@ enum Camera_Movement
 // Default camera values
 const float YAW = 60.0f;
 const float PITCH = 0.00f;
-const float SPEED = 100.0f;
+const float SPEED = 250.0f;
 const float SENSITIVTY = 0.1f;
 const float ZOOM = 45.0f;
 
@@ -112,18 +112,39 @@ class Camera
 			Pi1 = f;
 			updateCameraVectors();
 		}
+
+		bool noOutOfCheck(glm::vec3 toVerify, float limitRow, float limitCol)
+		{
+			if (toVerify.x <= 5.5f)
+				return false;
+			if (toVerify.y <= 5.5f)
+				return false;
+			if (toVerify.z <= 5.5f)
+				return false;
+			if (toVerify.x >= limitRow - 5.0f)
+				return false;
+			if (toVerify.z >= limitCol - 5.0f)
+				return false;
+			if (toVerify.y >= 75.0f)
+				return false;
+			return true;
+		}
 		// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-		void ProcessKeyboard(Camera_Movement direction, float deltaTime)
+		void ProcessKeyboard(Camera_Movement direction, float deltaTime, float limitCol, float limitRow)
 		{
 			float velocity = MovementSpeed * deltaTime;
-			if (direction == FORWARD)
+			if (direction == FORWARD && noOutOfCheck((Position + Front * velocity), limitRow, limitCol))
 				Position += Front * velocity;
+
 			if (direction == BACKWARD)
-				Position -= Front * velocity;
+				if (noOutOfCheck((Position - Front * velocity), limitRow, limitCol))
+					Position -= Front * velocity;
 			if (direction == LEFT)
-				Position -= Right * velocity;
+				if (noOutOfCheck((Position - Right * velocity), limitRow, limitCol))
+					Position -= Right * velocity;
 			if (direction == RIGHT)
-				Position += Right * velocity;
+				if (noOutOfCheck((Position + Right * velocity), limitRow, limitCol))
+					Position += Right * velocity;
 		}
 
 		// Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
@@ -148,19 +169,7 @@ class Camera
 			updateCameraVectors();
 		}
 
-		// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
-		void ProcessMouseScroll(float yoffset)
-		{
-			if (Zoom >= 1.0f && Zoom <= 45.0f)
-				Zoom -= yoffset;
-			if (Zoom <= 1.0f)
-				Zoom = 1.0f;
-			if (Zoom >= 45.0f)
-				Zoom = 45.0f;
-		}
 
-
-		// Calculates the front vector from the Camera's (updated) Eular Angles
 		void updateCameraVectors()
 		{
 			// Calculate the new Front vector
@@ -170,7 +179,7 @@ class Camera
 			front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
 			Front = glm::normalize(front);
 			// Also re-calculate the Right and Up vector
-			Right = glm::normalize(glm::cross(Front, WorldUp)); // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+			Right = glm::normalize(glm::cross(Front, WorldUp));
 			Up = glm::normalize(glm::cross(Right, Front));
 		}
 };

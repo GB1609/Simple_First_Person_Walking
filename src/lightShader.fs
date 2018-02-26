@@ -14,7 +14,7 @@ void main()
 {
 	vec3 lightColor=vec3(1.0f,1.0f,1.0f);
 	vec3 colorTexture = texture(TEXTURE, TextCoords).rgb;
-    float constantAmbient = 0.7f;
+    float constantAmbient = 0.3f;
     vec3 ambient = constantAmbient * lightColor *colorTexture;//*colorTexture
   	
     // Diffuse 
@@ -25,7 +25,7 @@ void main()
     
     
    // specular
-   float specularIntensity = 0.1f;
+   float specularIntensity = 0.3f;
    vec3 viewDir = normalize(viewPos - FragPos);
    vec3 halfwayDir = normalize(lightDir + viewDir);  
    float spec = pow(max(dot(normale, halfwayDir), 0.0), 32); 
