@@ -18,12 +18,11 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../lib/stb_image.h"
 #include "camera.h"
-#include "SupportObjects.h"
 using namespace std;
 using namespace glm;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void processInput(GLFWwindow *window);
+void processInput(GLFWwindow *window, SupportObjects& support);
 unsigned int loadTexture(const char * path);
 int stepProject = 0;
 
@@ -63,7 +62,7 @@ int main()
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
 	{
 		std::cout << "Failed to initialize GLAD" << std::endl;
@@ -71,7 +70,7 @@ int main()
 	}
 
 	///////////////LOAD SHADER////////////////////////
-	Shader ourShader("src/model.vs", "src/model.fs");
+	Shader objShader("src/model.vs", "src/model.fs");
 	Shader lightShader("src/lightShader.vs", "src/lightShader.fs");
 	////////////////////////////SHDAERS//////////////////////////////
 	SupportObjects support;
@@ -109,9 +108,10 @@ int main()
 
 	//////MODELLO
 	Model guard("Data/nanosuit/nanosuit.obj");
-	Model cubeColored("Data/cubeColored/Cube.obj");
-	Model gameBlock("Data/Game_block/cub.obj");
-	Model rubik("Data/RubiksCube/Cube.obj");
+	support.setGuardPosition(glm::vec3(lightPos.x, 5.75f, lightPos.z));
+//	Model cubeColored("Data/cubeColored/Cube.obj");
+//	Model gameBlock("Data/Game_block/cub.obj");
+//	Model rubik("Data/RubiksCube/Cube.obj");
 	////////////////////////////floor///////////////////////////////////////////////
 
 //	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -124,14 +124,13 @@ int main()
 		currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-		processInput(window);
+		processInput(window, support);
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		lightShader.use();
 		glm::mat4 modelL = glm::mat4();
 		modelL = glm::translate(modelL, glm::vec3(1.0f, 0.0f, 1.0f));
-		//glm::mat4 projectionProspective = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 100.0f);
 		glm::mat4 projectionL = glm::perspective(glm::radians(cam.Zoom), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f,
 				10000.0f);
 		glm::mat4 viewL = cam.GetViewMatrix();
@@ -146,32 +145,29 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, textID);
 		glDrawElements( GL_TRIANGLES, indexFloor.size(), GL_UNSIGNED_INT, 0);
 
-
-
 		// render the loaded model
-//		glm::mat4 model;
-		modelL = glm::translate(modelL, glm::vec3(300.0f, 5.75f, 300.0f));
-		modelL = glm::scale(modelL, glm::vec3(5.0f, 5.0f, 5.0f));
-		lightShader.setMat4("model", modelL);
-		lightShader.setBool("modelImport", true);
-		//		ourShader.setMat4("model", model);
-		guard.Draw(lightShader);
-		ourShader.use();
-		glm::mat4 projection = glm::perspective(glm::radians(cam.Zoom), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f,
-				10000.0f);
-		glm::mat4 view = cam.GetViewMatrix();
-		ourShader.setMat4("projection", projection);
-		ourShader.setMat4("view", view);
-		modelL = glm::translate(modelL, glm::vec3(50.0f, 5.75f, 50.0f));
-		modelL = glm::scale(modelL, glm::vec3(0.2f, 0.2f, 0.2f));
-		ourShader.setMat4("model", modelL);
-		lightShader.setBool("modelImport", true);
-		cubeColored.Draw(ourShader);
 
-//		glActiveTexture(GL_TEXTURE1);
-//		rock1.Draw(lightShader);
-//		dodge.Draw(ourShader);
-//		nissan.Draw(ourShader);
+		objShader.use();
+		glm::mat4 model;
+		objShader.setMat4("projection", projectionL);
+		objShader.setMat4("view", viewL);
+		modelL = glm::translate(modelL, support.getGuardPosition());
+		modelL = glm::scale(modelL, glm::vec3(5.0f, 5.0f, 5.0f));
+		objShader.setMat4("model", modelL);
+		objShader.setBool("modelImport", true);
+		guard.Draw(objShader);
+		modelL = glm::translate(modelL, -support.getGuardPosition());
+
+
+//		modelL = glm::translate(modelL, glm::vec3(50.0f, 0.0f, 50.0f));
+//		modelL = glm::scale(modelL, glm::vec3(1.0f, 1.0f, 1.0f));
+//		objShader.setMat4("model", modelL);
+//		objShader.setMat4("projection", projectionL);
+//		objShader.setMat4("view", viewL);
+//		objShader.setBool("modelImport", true);
+//		rubik.Draw(objShader);
+
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -184,7 +180,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
 }
-void processInput(GLFWwindow *window)
+void processInput(GLFWwindow *window, SupportObjects& support)
 {
 
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -206,42 +202,42 @@ void processInput(GLFWwindow *window)
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		cam.ProcessKeyboard(FORWARD, deltaTime, nCols * cellSize, nRows * cellSize);
+		cam.ProcessKeyboard(FORWARD, deltaTime, nCols * cellSize, nRows * cellSize, support);
 		moved = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		cam.ProcessKeyboard(BACKWARD, deltaTime, nCols * cellSize, nRows * cellSize);
+		cam.ProcessKeyboard(BACKWARD, deltaTime, nCols * cellSize, nRows * cellSize, support);
 		moved = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		cam.ProcessKeyboard(LEFT, deltaTime, nCols * cellSize, nRows * cellSize);
+		cam.ProcessKeyboard(LEFT, deltaTime, nCols * cellSize, nRows * cellSize, support);
 		moved = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 	{
-		cam.ProcessKeyboard(ROTATELEFT, deltaTime, nCols * cellSize, nRows * cellSize);
+		cam.ProcessKeyboard(ROTATELEFT, deltaTime, nCols * cellSize, nRows * cellSize, support);
 		moved = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 	{
-		cam.ProcessKeyboard(ROTATERIGHT, deltaTime, nCols * cellSize, nRows * cellSize);
+		cam.ProcessKeyboard(ROTATERIGHT, deltaTime, nCols * cellSize, nRows * cellSize, support);
 		moved = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 	{
-		cam.ProcessKeyboard(ROTATEUP, deltaTime, nCols * cellSize, nRows * cellSize);
+		cam.ProcessKeyboard(ROTATEUP, deltaTime, nCols * cellSize, nRows * cellSize, support);
 		moved = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 	{
-		cam.ProcessKeyboard(ROTATEDOWN, deltaTime, nCols * cellSize, nRows * cellSize);
+		cam.ProcessKeyboard(ROTATEDOWN, deltaTime, nCols * cellSize, nRows * cellSize, support);
 		moved = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		cam.ProcessKeyboard(RIGHT, deltaTime, nCols * cellSize, nRows * cellSize);
+		cam.ProcessKeyboard(RIGHT, deltaTime, nCols * cellSize, nRows * cellSize, support);
 		moved = true;
 	}
 

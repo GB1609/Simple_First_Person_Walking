@@ -6,6 +6,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 using namespace std;
 #include <vector>
+#include "SupportObjects.h"
+
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
 enum Camera_Movement
@@ -16,7 +18,7 @@ enum Camera_Movement
 // Default camera values
 const float YAW = 60.0f;
 const float PITCH = 0.00f;
-const float SPEED = 250.0f;
+const float SPEED = 150.0f;
 const float SENSITIVTY = 0.1f;
 const float ZOOM = 45.0f;
 
@@ -130,10 +132,12 @@ class Camera
 			return true;
 		}
 		// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-		void ProcessKeyboard(Camera_Movement direction, float deltaTime, float limitCol, float limitRow)
+		void ProcessKeyboard(Camera_Movement direction, float deltaTime, float limitCol, float limitRow,
+				SupportObjects& support)
 		{
 			float velocity = MovementSpeed * deltaTime;
-			if (direction == FORWARD && noOutOfCheck((Position + Front * velocity), limitRow, limitCol))
+			if (direction == FORWARD && noOutOfCheck((Position + Front * velocity), limitRow, limitCol)
+					&& support.checkGuardCollision(Position, (Position + Front * velocity)))
 				Position += Front * velocity;
 
 			if (direction == BACKWARD)

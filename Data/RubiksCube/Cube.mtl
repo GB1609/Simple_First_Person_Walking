@@ -24,8 +24,9 @@ newmtl Red
 	Kd 0.780392 0.000000 0.000000
 	Ks 0.675000 0.675000 0.675000
 	Ke 0.000000 0.000000 0.000000
-	map_Ka Map__1_Noise.tga
-	map_Kd Map__1_Noise.tga
+	map_Ka Map__1_Noise.png
+	map_Kd Map__1_Noise.png
+	map_Kd Map__1_Noise.png
 
 newmtl Yellow
 	Ns 37.000000
@@ -38,9 +39,10 @@ newmtl Yellow
 	Kd 0.988235 0.835294 0.000000
 	Ks 0.576000 0.576000 0.576000
 	Ke 0.000000 0.000000 0.000000
-	map_Ka Map__2_Noise.tga
-	map_Kd Map__2_Noise.tga
-
+	map_Ka Map__2_Noise.png
+	map_Kd Map__2_Noise.png
+	map_Kd Map__2_Noise.png
+	
 newmtl Purple
 	Ns 36.000000
 	Ni 1.500000
@@ -52,8 +54,9 @@ newmtl Purple
 	Kd 0.450980 0.133333 0.478431
 	Ks 0.720000 0.720000 0.720000
 	Ke 0.000000 0.000000 0.000000
-	map_Ka Map__3_Noise.tga
-	map_Kd Map__3_Noise.tga
+	map_Ka Map__3_Noise.png
+	map_Kd Map__3_Noise.png
+	map_Kd Map__3_Noise.png
 
 newmtl Blue
 	Ns 33.000000
@@ -66,8 +69,9 @@ newmtl Blue
 	Kd 0.031373 0.482353 0.741176
 	Ks 0.765000 0.765000 0.765000
 	Ke 0.000000 0.000000 0.000000
-	map_Ka Map__6_Noise.tga
-	map_Kd Map__6_Noise.tga
+	map_Ka Map__6_Noise.png
+	map_Kd Map__6_Noise.png
+	map_Kd Map__6_Noise.png
 
 newmtl Green
 	Ns 36.000000
@@ -80,8 +84,9 @@ newmtl Green
 	Kd 0.098039 0.525490 0.000000
 	Ks 0.729000 0.729000 0.729000
 	Ke 0.000000 0.000000 0.000000
-	map_Ka Map__5_Noise.tga
-	map_Kd Map__5_Noise.tga
+	map_Ka Map__5_Noise.png
+	map_Kd Map__5_Noise.png
+	map_Kd Map__5_Noise.png
 
 newmtl Orange
 	Ns 32.000000
@@ -94,5 +99,6 @@ newmtl Orange
 	Kd 0.964706 0.545098 0.000000
 	Ks 0.702000 0.702000 0.702000
 	Ke 0.000000 0.000000 0.000000
-	map_Ka Map__4_Noise.tga
-	map_Kd Map__4_Noise.tga
+	map_Ka Map__4_Noise.png
+	map_Kd Map__4_Noise.png
+	map_Kd Map__4_Noise.png

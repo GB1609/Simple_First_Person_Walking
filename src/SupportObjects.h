@@ -12,6 +12,7 @@ using namespace std;
 class SupportObjects
 {
 	private:
+		glm::vec3 guardPosition;
 	public:
 		SupportObjects() // @suppress("Class members should be properly initialized")
 		{
@@ -33,6 +34,34 @@ class SupportObjects
 					texture.push_back(((cellSize * nRows) - (cellSize * i)) / (cellSize * nRows));
 				}
 
+		}
+
+		void setGuardPosition(glm::vec3 pos)
+		{
+			guardPosition = pos;
+		}
+
+		bool checkGuardCollision(glm::vec3 one, glm::vec3 two) // AABB - AABB collision
+		{
+
+			two.x += 30;
+			two.z += 30;
+
+			if (one.z > guardPosition.z + 100 || one.z < guardPosition.z - 100)
+				return true;
+			if (one.x > guardPosition.x + 100 || one.x < guardPosition.x - 100)
+				return true;
+
+			if (guardPosition.x > one.x && guardPosition.x < two.x)
+				return false;
+			if (guardPosition.z > one.z && guardPosition.z < two.z)
+				return false;
+			if (guardPosition.x < one.x && guardPosition.x > two.x)
+				return false;
+			if (guardPosition.x < one.z && guardPosition.z > two.z)
+				return false;
+
+			return true;
 		}
 
 		void generateIndexFloor(vector<unsigned int>& index, int nCols, int nRows)
@@ -81,6 +110,10 @@ class SupportObjects
 					cout << "[" << vertex[i] << "]";
 		}
 
+		const glm::vec3& getGuardPosition() const
+		{
+			return guardPosition;
+		}
 };
 
 #endif /* SRC_SUPPORTOBJECTS_H_ */
