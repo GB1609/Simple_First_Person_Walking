@@ -13,6 +13,12 @@ class SupportObjects
 {
 	private:
 		glm::vec3 guardPosition;
+		glm::vec3 conePosition;
+		glm::vec3 spherePosition;
+		glm::vec3 cubePosition;
+		float radiusCone;
+		float radiusSphere;
+		float cubeSize;
 	public:
 		SupportObjects() // @suppress("Class members should be properly initialized")
 		{
@@ -41,15 +47,20 @@ class SupportObjects
 			guardPosition = pos;
 		}
 
+		void setCubePosition(glm::vec3 pos)
+		{
+			cubePosition = pos;
+		}
+
 		bool checkGuardCollision(glm::vec3 one, glm::vec3 two) // AABB - AABB collision
 		{
 
 			two.x += 30;
 			two.z += 30;
 
-			if (one.z > guardPosition.z + 100 || one.z < guardPosition.z - 100)
+			if (one.z > guardPosition.z + 50 || one.z < guardPosition.z - 50)
 				return true;
-			if (one.x > guardPosition.x + 100 || one.x < guardPosition.x - 100)
+			if (one.x > guardPosition.x + 50 || one.x < guardPosition.x - 50)
 				return true;
 
 			if (guardPosition.x > one.x && guardPosition.x < two.x)
@@ -113,6 +124,47 @@ class SupportObjects
 		const glm::vec3& getGuardPosition() const
 		{
 			return guardPosition;
+		}
+
+		const glm::vec3& getConePosition() const
+		{
+			return conePosition;
+		}
+
+		const glm::vec3& getSpherePosition() const
+		{
+			return spherePosition;
+		}
+
+		void setConePosition(const glm::vec3& conePosition, float radiusCone)
+		{
+			this->conePosition = conePosition;
+			this->radiusCone = radiusCone;
+		}
+		void setSPherePosition(const glm::vec3& conePosition, float radiusCone)
+		{
+			this->spherePosition = conePosition;
+			this->radiusSphere = radiusCone;
+		}
+
+		const glm::vec3& getCubePosition() const
+		{
+			return cubePosition;
+		}
+
+		float getCubeSize() const
+		{
+			return cubeSize;
+		}
+
+		float getRadiusCone() const
+		{
+			return radiusCone;
+		}
+
+		float getRadiusSphere() const
+		{
+			return radiusSphere;
 		}
 };
 

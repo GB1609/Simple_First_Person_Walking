@@ -8,13 +8,40 @@ out vec4 finalColor;
 
 uniform vec3 lightPos; 
 uniform vec3 viewPos;
-uniform sampler2D TEXTURE;
-uniform bool modelImport;
+
+uniform sampler2D TEXTURE1;
+uniform sampler2D TEXTURE2;
+uniform sampler2D TEXTURE3;
+uniform sampler2D TEXTURE4;
+uniform sampler2D TEXTURE5;
+
+uniform int textureSelected;
 
 void main()
 {
 	vec3 lightColor=vec3(1.0f,1.0f,1.0f);
-	vec3 colorTexture = texture(TEXTURE, TextCoords).rgb;
+	vec3 colorTexture;
+	if(textureSelected==0)
+	{
+	colorTexture = texture(TEXTURE1, TextCoords).rgb;
+	}
+	if(textureSelected==1)
+	{
+	colorTexture = texture(TEXTURE2, TextCoords).rgb;
+	}
+	if(textureSelected==2)
+	{
+	colorTexture = texture(TEXTURE3, TextCoords).rgb;
+	}
+	if(textureSelected==3)
+	{
+	colorTexture = texture(TEXTURE4, TextCoords).rgb;
+	}
+	if(textureSelected==4)
+	{
+	colorTexture = texture(TEXTURE5, TextCoords).rgb;
+	}
+	
     float constantAmbient = 0.8f;
     vec3 ambient = constantAmbient * lightColor *colorTexture;//*colorTexture
   	

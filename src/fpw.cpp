@@ -18,6 +18,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../lib/stb_image.h"
 #include "camera.h"
+#include "coneGenerator.h"
+#include "particle.h"
 using namespace std;
 using namespace glm;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -105,20 +107,86 @@ int main()
 	glEnableVertexAttribArray(2);
 
 	unsigned int textID = loadTexture("Data/floor.png");
+	lightShader.use();
+	lightShader.setInt("TEXTURE1", 0);
 
-	//////MODELLO
+	//////MODELLO ALBANO
 	Model guard("Data/nanosuit/nanosuit.obj");
-	support.setGuardPosition(glm::vec3(lightPos.x, 5.75f, lightPos.z));
-//	Model cubeColored("Data/cubeColored/Cube.obj");
-//	Model gameBlock("Data/Game_block/cub.obj");
-//	Model rubik("Data/RubiksCube/Cube.obj");
-	////////////////////////////floor///////////////////////////////////////////////
+	lightShader.use();
+	lightShader.setInt("TEXTURE2", 1);
+	support.setGuardPosition(glm::vec3(lightPos.x, 0.75f, lightPos.z));
 
-//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-//	glEnable(GL_DEPTH_TEST);
-//	glDepthFunc(GL_ALWAYS);
-//	glEnable(GL_BLEND);
-//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	////////MODELLO RUBIK
+//	Model rubik("Data/cubeColored/Cube.obj");
+////	Model rubik("Data/Game_block/cub.obj");
+	Model rubik("Data/obj/objAztec.obj");
+	lightShader.use();
+	lightShader.setInt("TEXTURE5", 3);
+	support.setCubePosition(glm::vec3(650, 10, 1100));
+
+	//////////CONE/////
+	unsigned int VAOcone, VBOcone, NORMALcone, TEXTUREcone;
+	Cone cone;
+	int increment = 10;
+
+	unsigned int nVertexCone = cone.dimensionCone(increment);
+	float vertexCone[nVertexCone];
+	float normalCone[nVertexCone];
+	float textureCOne[cone.numberTextureCone(increment)];
+	cone.createCone(vertexCone, normalCone, textureCOne, 5.00f, increment);
+	glGenVertexArrays(1, &VAOcone);
+	glGenBuffers(1, &VBOcone);
+	glGenBuffers(1, &NORMALcone);
+	glGenBuffers(1, &TEXTUREcone);
+	glBindVertexArray(VAOcone);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOcone);
+	glBufferData(GL_ARRAY_BUFFER, nVertexCone * sizeof(float), vertexCone, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*) 0);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, NORMALcone);
+	glBufferData(GL_ARRAY_BUFFER, nVertexCone * sizeof(float), normalCone, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*) 0);
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, TEXTUREcone);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(textureCOne) * sizeof(float), textureCOne, GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*) 0);
+	glEnableVertexAttribArray(2);
+
+	unsigned int coneID = loadTexture("Data/cone.jpg");
+	lightShader.use();
+	lightShader.setInt("TEXTURE3", 2);
+	support.setConePosition(glm::vec3(lightPos.x - 200.0f, -0.10f, lightPos.z - 100.0f), cone.radius);
+
+	///////////////SPHERE
+	unsigned int VBOsphere, VAOsphere, TEXTUREsphere;
+	float radius = 130.25f;
+	int precisionSphere = 200;
+	Particle particle(radius, precisionSphere, precisionSphere);
+	vector<float> vertexSphere;
+	vector<float> textureSphere;
+	particle.setVertex(vertexSphere, textureSphere);
+//	support.addSpherePosition();
+	glGenVertexArrays(1, &VAOsphere);
+	glGenBuffers(1, &VBOsphere);
+	glGenBuffers(1, &TEXTUREsphere);
+	glBindVertexArray(VAOsphere);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOsphere);
+	glBufferData(GL_ARRAY_BUFFER, vertexSphere.size() * sizeof(float), &vertexSphere[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*) 0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*) 0);
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, TEXTUREsphere);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * textureSphere.size(), &textureSphere[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*) 0);
+	glEnableVertexAttribArray(2);
+	unsigned int sphereID = loadTexture("Data/sphere.jpg");
+	lightShader.use();
+	lightShader.setInt("TEXTURE4", 3);
+	support.setSPherePosition(glm::vec3(lightPos.x + 200.0f, -0.10f, lightPos.z - 75.0f), particle.getRadius());
+
+	glEnable(GL_DEPTH_TEST);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	while (!glfwWindowShouldClose(window))
 	{
 		currentFrame = glfwGetTime();
@@ -126,52 +194,98 @@ int main()
 		lastFrame = currentFrame;
 		processInput(window, support);
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		//////////////DRAW FLOOR/////////////////
 		lightShader.use();
 		glm::mat4 modelL = glm::mat4();
 		modelL = glm::translate(modelL, glm::vec3(1.0f, 0.0f, 1.0f));
-		glm::mat4 projectionL = glm::perspective(glm::radians(cam.Zoom), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f,
+		glm::mat4 projectionL = glm::perspective(glm::radians(cam.Zoom), (float) SCR_WIDTH / (float) SCR_HEIGHT, 1.1f,
 				10000.0f);
 		glm::mat4 viewL = cam.GetViewMatrix();
-		lightShader.setBool("modelImport", false);
+		lightShader.setInt("textureSelected", 0);
 		lightShader.setVec3("lightPos", lightPos);
 		lightShader.setVec3("viewPos", cam.Position);
 		lightShader.setMat4("projection", projectionL);
 		lightShader.setMat4("view", viewL);
 		lightShader.setMat4("model", modelL);
-		glBindVertexArray(VAO);
-		glActiveTexture(GL_TEXTURE0);
+		glad_glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textID);
+		glBindVertexArray(VAO);
 		glDrawElements( GL_TRIANGLES, indexFloor.size(), GL_UNSIGNED_INT, 0);
 
-		// render the loaded model
+		////////////////////////DRAW CONE///////////////
+		lightShader.use();
+		glm::mat4 modelCone;
+		lightShader.setMat4("projection", projectionL);
+		lightShader.setMat4("view", viewL);
+		lightShader.setInt("textureSelected", 2);
+		modelCone = glm::translate(modelCone, support.getConePosition());
+		modelCone = glm::scale(modelCone, glm::vec3(30.0f, 30.0f, 30.0f));
+		lightShader.setMat4("model", modelCone);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, coneID);
+		glBindVertexArray(VAOcone);
+		glDrawArrays(GL_TRIANGLES, 0, nVertexCone);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
-		objShader.use();
-		glm::mat4 model;
-		objShader.setMat4("projection", projectionL);
-		objShader.setMat4("view", viewL);
-		modelL = glm::translate(modelL, support.getGuardPosition());
-		modelL = glm::scale(modelL, glm::vec3(5.0f, 5.0f, 5.0f));
-		objShader.setMat4("model", modelL);
-		objShader.setBool("modelImport", true);
-		guard.Draw(objShader);
-		modelL = glm::translate(modelL, -support.getGuardPosition());
+		//////////////////////DRAW GUARD
+		lightShader.use();
+		glm::mat4 modelGuard = glm::mat4();
+		lightShader.setMat4("projection", projectionL);
+		lightShader.setMat4("view", viewL);
+		lightShader.setInt("textureSelected", 1);
+		modelGuard = glm::translate(modelGuard, support.getGuardPosition());
+		modelGuard = glm::scale(modelGuard, glm::vec3(5.0f, 5.0f, 5.0f));
+		lightShader.setMat4("model", modelGuard);
+		glActiveTexture(GL_TEXTURE1);
+		guard.Draw(lightShader);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
+		////////////////////////DRAW Sphere///////////////
+		lightShader.use();
+		glm::mat4 modelSPhere;
+		lightShader.setMat4("projection", projectionL);
+		lightShader.setMat4("view", viewL);
+		lightShader.setInt("textureSelected", 3);
+		modelSPhere = glm::translate(modelSPhere, support.getSpherePosition());
+//		modelSPhere = glm::scale(modelCone, glm::vec3(20.0f, 20.0f, 20.0f));
+		lightShader.setMat4("model", modelSPhere);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, sphereID);
+		glBindVertexArray(VAOsphere);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexSphere.size());
+		glBindTexture(GL_TEXTURE_2D, 0);
 
-//		modelL = glm::translate(modelL, glm::vec3(50.0f, 0.0f, 50.0f));
-//		modelL = glm::scale(modelL, glm::vec3(1.0f, 1.0f, 1.0f));
-//		objShader.setMat4("model", modelL);
-//		objShader.setMat4("projection", projectionL);
-//		objShader.setMat4("view", viewL);
-//		objShader.setBool("modelImport", true);
-//		rubik.Draw(objShader);
-
+		//////////////////////DRAW AZTEC
+		lightShader.use();
+		glm::mat4 modelRubik = glm::mat4();
+		lightShader.setMat4("projection", projectionL);
+		lightShader.setMat4("view", viewL);
+		lightShader.setInt("textureSelected", 4);
+		modelRubik = glm::translate(modelRubik, support.getCubePosition());
+		modelRubik = glm::scale(modelRubik, glm::vec3(5.0f, 5.0f, 5.0f));
+		lightShader.setMat4("model", modelRubik);
+		glActiveTexture(GL_TEXTURE4);
+		rubik.Draw(lightShader);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
+	glDeleteBuffers(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
+	glDeleteBuffers(1, &NORMAL);
+	glDeleteBuffers(1, &TEXTURES);
+	glDeleteBuffers(1, &VAOcone);
+	glDeleteBuffers(1, &VBOcone);
+	glDeleteBuffers(1, &NORMALcone);
+	glDeleteBuffers(1, &TEXTUREcone);
+	glDeleteBuffers(1, &VAOsphere);
+	glDeleteBuffers(1, &VBOsphere);
+	glDeleteBuffers(1, &TEXTUREsphere);
 	glfwTerminate();
 	return 0;
 }
