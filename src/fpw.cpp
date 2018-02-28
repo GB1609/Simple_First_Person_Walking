@@ -40,6 +40,20 @@ float searchMinTex(Model guard)
 		}
 	return min;
 }
+float searchMaxTex(Model guard)
+{
+	float max = guard.meshes[0].vertices[0].Position.x;
+	for (int i = 0; i < guard.meshes.size(); i++)
+		for (int j = 0; j < guard.meshes[i].vertices.size(); j++)
+		{
+			if (guard.meshes[i].vertices[j].Position.x > max)
+				max = guard.meshes[i].vertices[j].Position.x;
+			if (guard.meshes[i].vertices[j].Position.z > max)
+				max = guard.meshes[i].vertices[j].Position.z;
+
+		}
+	return max;
+}
 float scaleCone = 30.0f;
 float scaleGuard = 5.0f;
 float scaleCube = 5.0f;
@@ -121,23 +135,31 @@ int main()
 
 	unsigned int textID = loadTexture("Data/floor.png");
 	lightShader.use();
-	lightShader.setInt("TEXTURE1", 0);
 
 	//////MODELLO ALBANO
 	Model guard("Data/nanosuit/nanosuit.obj");
 	lightShader.use();
-	lightShader.setInt("TEXTURE2", 1);
 	float min = searchMinTex(guard);
-	support.setGuardPosition(glm::vec3(lightPos.x, 0.75f, lightPos.z), (min * scaleGuard));
+	float max = searchMaxTex(guard);
+	float sizeGuard;
+	if (abs(min) > abs(max))
+		sizeGuard = min;
+	else
+		sizeGuard = max;
 
-	////////MODELLO RUBIK
-//	Model rubik("Data/cubeColored/Cube.obj");
-////	Model rubik("Data/Game_block/cub.obj");
+	support.setGuardPosition(glm::vec3(lightPos.x, 0.75f, lightPos.z), (sizeGuard * scaleGuard));
+
+	////////MODELLO AZTEC
 	Model aztec("Data/obj/objAztec.obj");
 	lightShader.use();
-	lightShader.setInt("TEXTURE5", 3);
 	float min2 = searchMinTex(aztec);
-	support.setCubePosition(glm::vec3(650, 10, 1100), (min2 * scaleCube));
+	float max2 = searchMaxTex(aztec);
+	float sizeAztec;
+	if (abs(min2) > abs(max2))
+		sizeAztec = min2;
+	else
+		sizeAztec = max2;
+	support.setCubePosition(glm::vec3(650, 10, 1100), (sizeAztec * scaleCube));
 
 	//////////CONE/////
 	unsigned int VAOcone, VBOcone, NORMALcone, TEXTUREcone;
@@ -169,7 +191,6 @@ int main()
 
 	unsigned int coneID = loadTexture("Data/cone.jpg");
 	lightShader.use();
-	lightShader.setInt("TEXTURE3", 2);
 	support.setConePosition(glm::vec3(lightPos.x - 200.0f, -0.10f, lightPos.z - 100.0f), cone.radius * scaleCone);
 
 	///////////////SPHERE
@@ -180,7 +201,6 @@ int main()
 	vector<float> vertexSphere;
 	vector<float> textureSphere;
 	particle.setVertex(vertexSphere, textureSphere);
-//	support.addSpherePosition();
 	glGenVertexArrays(1, &VAOsphere);
 	glGenBuffers(1, &VBOsphere);
 	glGenBuffers(1, &TEXTUREsphere);
@@ -197,7 +217,6 @@ int main()
 	glEnableVertexAttribArray(2);
 	unsigned int sphereID = loadTexture("Data/sphere.jpg");
 	lightShader.use();
-	lightShader.setInt("TEXTURE4", 3);
 	support.setSPherePosition(glm::vec3(lightPos.x + 200.0f, -0.10f, lightPos.z - 75.0f), particle.getRadius());
 
 	glEnable(GL_DEPTH_TEST);
@@ -218,13 +237,11 @@ int main()
 		glm::mat4 projectionL = glm::perspective(glm::radians(cam.Zoom), (float) SCR_WIDTH / (float) SCR_HEIGHT, 1.1f,
 				10000.0f);
 		glm::mat4 viewL = cam.GetViewMatrix();
-		lightShader.setInt("textureSelected", 0);
 		lightShader.setVec3("lightPos", lightPos);
 		lightShader.setVec3("viewPos", cam.Position);
 		lightShader.setMat4("projection", projectionL);
 		lightShader.setMat4("view", viewL);
 		lightShader.setMat4("model", modelL);
-		glad_glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textID);
 		glBindVertexArray(VAO);
 		glDrawElements( GL_TRIANGLES, indexFloor.size(), GL_UNSIGNED_INT, 0);
@@ -234,11 +251,9 @@ int main()
 		glm::mat4 modelCone;
 		lightShader.setMat4("projection", projectionL);
 		lightShader.setMat4("view", viewL);
-		lightShader.setInt("textureSelected", 2);
 		modelCone = glm::translate(modelCone, support.getConePosition());
 		modelCone = glm::scale(modelCone, glm::vec3(scaleCone, scaleCone, scaleCone));
 		lightShader.setMat4("model", modelCone);
-		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, coneID);
 		glBindVertexArray(VAOcone);
 		glDrawArrays(GL_TRIANGLES, 0, nVertexCone);
@@ -249,11 +264,9 @@ int main()
 		glm::mat4 modelGuard = glm::mat4();
 		lightShader.setMat4("projection", projectionL);
 		lightShader.setMat4("view", viewL);
-		lightShader.setInt("textureSelected", 1);
 		modelGuard = glm::translate(modelGuard, support.getGuardPosition());
-		modelGuard = glm::scale(modelGuard, glm::vec3(5.0f, 5.0f, 5.0f));
+		modelGuard = glm::scale(modelGuard, glm::vec3(scaleGuard, scaleGuard, scaleGuard));
 		lightShader.setMat4("model", modelGuard);
-		glActiveTexture(GL_TEXTURE1);
 		guard.Draw(lightShader);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -262,11 +275,8 @@ int main()
 		glm::mat4 modelSPhere;
 		lightShader.setMat4("projection", projectionL);
 		lightShader.setMat4("view", viewL);
-		lightShader.setInt("textureSelected", 3);
 		modelSPhere = glm::translate(modelSPhere, support.getSpherePosition());
-//		modelSPhere = glm::scale(modelCone, glm::vec3(20.0f, 20.0f, 20.0f));
 		lightShader.setMat4("model", modelSPhere);
-		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, sphereID);
 		glBindVertexArray(VAOsphere);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexSphere.size());
@@ -277,11 +287,9 @@ int main()
 		glm::mat4 modelRubik = glm::mat4();
 		lightShader.setMat4("projection", projectionL);
 		lightShader.setMat4("view", viewL);
-		lightShader.setInt("textureSelected", 4);
 		modelRubik = glm::translate(modelRubik, support.getCubePosition());
-		modelRubik = glm::scale(modelRubik, glm::vec3(5.0f, 5.0f, 5.0f));
+		modelRubik = glm::scale(modelRubik, glm::vec3(scaleCube, scaleCube, scaleCube));
 		lightShader.setMat4("model", modelRubik);
-		glActiveTexture(GL_TEXTURE4);
 		aztec.Draw(lightShader);
 		glBindTexture(GL_TEXTURE_2D, 0);
 

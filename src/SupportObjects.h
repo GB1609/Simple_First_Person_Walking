@@ -76,11 +76,14 @@ class SupportObjects
 				case 4:
 					verify = cubePosition;
 					size = cubeSize;
+					cout << size << endl;
+					cout << verify.x << "-" << verify.y << "-" << verify.z << endl;
 					break;
 				default:
 					cout << "errore" << endl;
 			}
-			if (one.z > verify.x + size + 50 || one.z < verify.z - size - 50)
+
+			if (one.z > verify.z + size + 50 || one.z < verify.z - size - 50)
 				return true;
 			if (one.x > verify.x + size + 50 || one.x < verify.x - size - 50)
 				return true;
