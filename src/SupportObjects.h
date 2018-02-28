@@ -19,6 +19,7 @@ class SupportObjects
 		float radiusCone;
 		float radiusSphere;
 		float cubeSize;
+		float sizeGuard;
 	public:
 		SupportObjects() // @suppress("Class members should be properly initialized")
 		{
@@ -42,37 +43,76 @@ class SupportObjects
 
 		}
 
-		void setGuardPosition(glm::vec3 pos)
+		void setGuardPosition(glm::vec3 pos, float sizeG)
 		{
 			guardPosition = pos;
+			sizeGuard = abs(sizeG);
 		}
 
-		void setCubePosition(glm::vec3 pos)
+		void setCubePosition(glm::vec3 pos, float cs)
 		{
 			cubePosition = pos;
+			cubeSize = abs(cs);
 		}
 
-		bool checkGuardCollision(glm::vec3 one, glm::vec3 two) // AABB - AABB collision
+		bool checkGeneralCollision(glm::vec3 one, glm::vec3 two, int type)
 		{
-
-			two.x += 30;
-			two.z += 30;
-
-			if (one.z > guardPosition.z + 50 || one.z < guardPosition.z - 50)
+			glm::vec3 verify;
+			float size;
+			switch (type)
+			{
+				case 1:
+					verify = guardPosition;
+					size = sizeGuard;
+					break;
+				case 2:
+					verify = conePosition;
+					size = radiusCone;
+					break;
+				case 3:
+					verify = spherePosition;
+					size = radiusSphere;
+					break;
+				case 4:
+					verify = cubePosition;
+					size = cubeSize;
+					break;
+				default:
+					cout << "errore" << endl;
+			}
+			if (one.z > verify.x + size + 50 || one.z < verify.z - size - 50)
 				return true;
-			if (one.x > guardPosition.x + 50 || one.x < guardPosition.x - 50)
+			if (one.x > verify.x + size + 50 || one.x < verify.x - size - 50)
 				return true;
 
-			if (guardPosition.x > one.x && guardPosition.x < two.x)
+			if ((verify.x - size) > one.x && verify.x - size >= two.x)
+				return true;
+			if ((verify.z - size) > one.z && verify.z - size >= two.z)
+				return true;
+			if ((verify.x + size) < one.x && verify.x + size <= two.x)
+				return true;
+			if ((verify.z + size) < one.z && verify.z + size <= two.z)
+				return true;
+
+			if (verify.x - size > one.x && verify.x - size < two.x)
 				return false;
-			if (guardPosition.z > one.z && guardPosition.z < two.z)
+			if (verify.z - size > one.z && verify.z - size < two.z)
 				return false;
-			if (guardPosition.x < one.x && guardPosition.x > two.x)
+			if (verify.x + size < one.x && verify.x + size > two.x)
 				return false;
-			if (guardPosition.x < one.z && guardPosition.z > two.z)
+			if (verify.x + size < one.z && verify.z + size > two.z)
 				return false;
 
-			return true;
+			return false;
+
+		}
+
+		bool checkCollision(glm::vec3 one, glm::vec3 two) // AABB - AABB collision
+		{
+			if (checkGeneralCollision(one, two, 1) && checkGeneralCollision(one, two, 2)
+					&& checkGeneralCollision(one, two, 3) && checkGeneralCollision(one, two, 4))
+				return true;
+			return false;
 		}
 
 		void generateIndexFloor(vector<unsigned int>& index, int nCols, int nRows)

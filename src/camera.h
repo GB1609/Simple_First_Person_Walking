@@ -137,17 +137,20 @@ class Camera
 		{
 			float velocity = MovementSpeed * deltaTime;
 			if (direction == FORWARD && noOutOfCheck((Position + Front * velocity), limitRow, limitCol)
-					&& support.checkGuardCollision(Position, (Position + Front * velocity)))
+					&& support.checkCollision(Position, (Position + Front * velocity)))
 				Position += Front * velocity;
 
 			if (direction == BACKWARD)
-				if (noOutOfCheck((Position - Front * velocity), limitRow, limitCol))
+				if (noOutOfCheck((Position - Front * velocity), limitRow, limitCol)
+						&& support.checkCollision(Position, (Position - Front * velocity)))
 					Position -= Front * velocity;
 			if (direction == LEFT)
-				if (noOutOfCheck((Position - Right * velocity), limitRow, limitCol))
+				if (noOutOfCheck((Position - Right * velocity), limitRow, limitCol)
+						&& support.checkCollision(Position, (Position - Right * velocity)))
 					Position -= Right * velocity;
 			if (direction == RIGHT)
-				if (noOutOfCheck((Position + Right * velocity), limitRow, limitCol))
+				if (noOutOfCheck((Position + Right * velocity), limitRow, limitCol)
+						&& support.checkCollision(Position, (Position + Right * velocity)))
 					Position += Right * velocity;
 			if (direction == ROTATERIGHT)
 			{

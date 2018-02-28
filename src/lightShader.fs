@@ -53,7 +53,7 @@ void main()
     
     
    // specular
-   float specularIntensity = 0.3f;
+   float specularIntensity = 0.7f;
    vec3 viewDir = normalize(viewPos - FragPos);
    vec3 halfwayDir = normalize(lightDir + viewDir);  
    float spec = pow(max(dot(normale, halfwayDir), 0.0), 32); 
@@ -61,7 +61,7 @@ void main()
      
      //attenuation
     float distance    = length(lightPos - FragPos);
-    float attenuation = 1.0 / (1.0 + 0.0039 * distance + 
+    float attenuation = 1.0 / (1.2 + 0.00039 * distance + 
     		    0.00000032 * (distance * distance));    
     ambient  *= attenuation; 
     diffuse   *= attenuation;

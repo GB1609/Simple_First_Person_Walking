@@ -26,8 +26,23 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void processInput(GLFWwindow *window, SupportObjects& support);
 unsigned int loadTexture(const char * path);
-int stepProject = 0;
+float searchMinTex(Model guard)
+{
+	float min = guard.meshes[0].vertices[0].Position.x;
+	for (int i = 0; i < guard.meshes.size(); i++)
+		for (int j = 0; j < guard.meshes[i].vertices.size(); j++)
+		{
+			if (guard.meshes[i].vertices[j].Position.x < min)
+				min = guard.meshes[i].vertices[j].Position.x;
+			if (guard.meshes[i].vertices[j].Position.z < min)
+				min = guard.meshes[i].vertices[j].Position.z;
 
+		}
+	return min;
+}
+float scaleCone = 30.0f;
+float scaleGuard = 5.0f;
+float scaleCube = 5.0f;
 // settings
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
@@ -64,7 +79,7 @@ int main()
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
 	{
 		std::cout << "Failed to initialize GLAD" << std::endl;
@@ -72,9 +87,7 @@ int main()
 	}
 
 	///////////////LOAD SHADER////////////////////////
-	Shader objShader("src/model.vs", "src/model.fs");
 	Shader lightShader("src/lightShader.vs", "src/lightShader.fs");
-	////////////////////////////SHDAERS//////////////////////////////
 	SupportObjects support;
 	////////////////////////////floor///////////////////////////////////////////////
 
@@ -114,15 +127,17 @@ int main()
 	Model guard("Data/nanosuit/nanosuit.obj");
 	lightShader.use();
 	lightShader.setInt("TEXTURE2", 1);
-	support.setGuardPosition(glm::vec3(lightPos.x, 0.75f, lightPos.z));
+	float min = searchMinTex(guard);
+	support.setGuardPosition(glm::vec3(lightPos.x, 0.75f, lightPos.z), (min * scaleGuard));
 
 	////////MODELLO RUBIK
 //	Model rubik("Data/cubeColored/Cube.obj");
 ////	Model rubik("Data/Game_block/cub.obj");
-	Model rubik("Data/obj/objAztec.obj");
+	Model aztec("Data/obj/objAztec.obj");
 	lightShader.use();
 	lightShader.setInt("TEXTURE5", 3);
-	support.setCubePosition(glm::vec3(650, 10, 1100));
+	float min2 = searchMinTex(aztec);
+	support.setCubePosition(glm::vec3(650, 10, 1100), (min2 * scaleCube));
 
 	//////////CONE/////
 	unsigned int VAOcone, VBOcone, NORMALcone, TEXTUREcone;
@@ -155,7 +170,7 @@ int main()
 	unsigned int coneID = loadTexture("Data/cone.jpg");
 	lightShader.use();
 	lightShader.setInt("TEXTURE3", 2);
-	support.setConePosition(glm::vec3(lightPos.x - 200.0f, -0.10f, lightPos.z - 100.0f), cone.radius);
+	support.setConePosition(glm::vec3(lightPos.x - 200.0f, -0.10f, lightPos.z - 100.0f), cone.radius * scaleCone);
 
 	///////////////SPHERE
 	unsigned int VBOsphere, VAOsphere, TEXTUREsphere;
@@ -221,7 +236,7 @@ int main()
 		lightShader.setMat4("view", viewL);
 		lightShader.setInt("textureSelected", 2);
 		modelCone = glm::translate(modelCone, support.getConePosition());
-		modelCone = glm::scale(modelCone, glm::vec3(30.0f, 30.0f, 30.0f));
+		modelCone = glm::scale(modelCone, glm::vec3(scaleCone, scaleCone, scaleCone));
 		lightShader.setMat4("model", modelCone);
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, coneID);
@@ -267,7 +282,7 @@ int main()
 		modelRubik = glm::scale(modelRubik, glm::vec3(5.0f, 5.0f, 5.0f));
 		lightShader.setMat4("model", modelRubik);
 		glActiveTexture(GL_TEXTURE4);
-		rubik.Draw(lightShader);
+		aztec.Draw(lightShader);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		glfwSwapBuffers(window);
